@@ -1,0 +1,44 @@
+﻿@page "/"
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<InputFile id="audioFile"/>
+
+<button @onclick="() => RecognizeFile()">Recognize Input File</button>
+
+<textarea id="phraseDiv" style="display: inline-block;width:500px;height:200px"></textarea>
+
+@code {
+    private IJSObjectReference? speechModule;
+    private string key = "<YOUR_SUBSCRIPTION_KEY>";
+    private string region = "<YOUR_SUBSCRIPTION_REGION>";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            speechModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./speechComponent.js");
+        }
+    }
+    private async Task RecognizeFile()
+    {
+        if (speechModule is not null)
+        {
+            await speechModule.InvokeVoidAsync("startRecognizer",
+                key, region).AsTask();
+        }
+    }
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (speechModule is not null)
+        {
+            await speechModule.DisposeAsync();
+        }
+    }
+}
